@@ -27,12 +27,13 @@ class CombineLoss(nn.Layer):
         loss_dict['loss'] = losses
         return loss_dict
 
-def build_loss(cfg, mode='train'):
+def build_loss(config, mode='train'):
     assert mode in ['train', 'eval']
+    cfg = copy.deepcopy(config)
     if mode == 'train':
-        cfg = copy.deepcopy(cfg['Loss']['Train'])
+        cfg = cfg['Loss']['Train']
     else:
-        cfg = copy.deepcopy(cfg['Loss']['Eval'])
+        cfg = cfg['Loss']['Eval']
 
     return CombineLoss(cfg)
     

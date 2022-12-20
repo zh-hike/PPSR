@@ -4,11 +4,10 @@ from .ops import transforms
 
 
 class BaseDataset(Dataset):
-    def __init__(self, clean_ops=None, noise_ops=None):
+    def __init__(self, ops):
         self.clean_imgs = []
         self.noise_imgs = []
-        self.clean_ops = clean_ops
-        self.noise_ops = noise_ops
+        self.ops = ops
 
 
     def __getitem__(self, idx):
@@ -18,8 +17,7 @@ class BaseDataset(Dataset):
         clean_img = Image.open(clean_img)
         noise_img = Image.open(noise_img)
 
-        noise_img = transforms(noise_img, self.noise_ops)
-        clean_img = transforms(clean_img, self.clean_ops)
+        noise_img, clean_img = transforms(noise_img, clean_img, self.ops)
         return noise_img, clean_img
 
     def __len__(self):

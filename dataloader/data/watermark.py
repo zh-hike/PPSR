@@ -7,11 +7,9 @@ class WaterMark(BaseDataset):
     def __init__(self,
                  clean_data,
                  noise_data,
-                 clean_ops=None,
-                 noise_ops=None):
-
-        super(WaterMark, self).__init__(clean_ops=clean_ops,
-                                        noise_ops=noise_ops)
+                 ops=None):
+        
+        super(WaterMark, self).__init__(ops=ops)
         self.clean_imgs = []
         self.noise_imgs = []
         for noise_img_file in os.listdir(noise_data):
