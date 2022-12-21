@@ -10,6 +10,9 @@
 * [5. 评估](#4-评估)
 * * [5.1 单机单卡](#41-单机单卡)
 * * [5.2 单机多卡](#42-单机多卡)
+* [6 推理](#6-推理)
+* * [6.1 模型导出](#61-模型导出)
+* * [6.2 模型推理](#62-模型推理)
 
 
 ## 1. 模型
@@ -83,5 +86,6 @@ python tools/export_model.py -c ./configs/denoise/unet_watermark.yaml -o Global.
 ### 6.2 模型推理
 模型导出后将使用测试数据集对模型进行推理，例如所有的测试文件都在`./test_data`中，运行命令
 ```
-python tools/inference.py -c ./configs/denoise/unet_watermark.yaml
+python tools/inference.py -c ./configs/denoise/unet_watermark.yaml -o Data.Test.path=./test_data
 ```
+模型会将推理的结果放入`Global.output_dir/Arch.name/Img`中。
