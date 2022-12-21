@@ -1,4 +1,5 @@
 import paddle
+import paddle.nn as nn
 from arch.builder import build_arch
 import paddle.distributed as dist
 import paddle
@@ -8,6 +9,7 @@ from utils.average_meter import AverageMeter, AverageMeterDict
 from .evaluation.util import log_eval_info
 from .trainer import *
 from .evaluation import *
+from .inference import *
 from tqdm import tqdm
 from dataloader.builder import build_dataloader
 from loss.builder import build_loss
@@ -21,7 +23,8 @@ class Engine:
         self.cfg = cfg
         self._name = f"{cfg['Arch']['name']}_{cfg['Data']['Train']['Dataset']['name']}"
         # 准备
-        os.makedirs(os.path.join(self.cfg['Global']['output_dir'], self.cfg['Arch']['name']), exist_ok=True)
+        self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])
+        os.makedirs(self.save_path, exist_ok=True)
 
         #  set model
         self.model = build_arch(cfg['Arch'])
@@ -32,11 +35,11 @@ class Engine:
             self.model = paddle.DataParallel(self.model)
         
         # logger
-        output_dir = cfg['Global'].get('output_dir', 'output_dir')
+        output_dir = cfg['Global'].get('output_dir', './output')
         self.train_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/train.log")
         self.train_logger.print_config(cfg)
         self.eval_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/eval.log")
-        
+
         # time info
         self.time_info = {'read_cost': AverageMeter(name="read_cost", postfix="s"),
                           'batch_cost': AverageMeter(name="batch_cost", postfix="s")}
@@ -44,6 +47,7 @@ class Engine:
         # train func
         self.train_func = eval("train_epoch_" + cfg['Global']['trainer'])
         self.eval_func = eval("eval_epoch_" + cfg['Global'].get("evaler", "base"))
+        self.inference_func = eval("inference_epoch_" + cfg['Global'].get("inferencer", "base"))
 
         # dataloader
         self.train_dl = build_dataloader(cfg, mode='train')
@@ -128,3 +132,30 @@ class Engine:
             if iter_id % self.cfg['Global']['save_interval_step'] == 0:
                 save_checkoutpoints(self, epoch_id, iter_id)
 
+    def export(self):
+        model = ExportModel(self.model)
+        model.eval()
+        os.makedirs(os.path.join(self.save_path, 'inference'), exist_ok=True)
+        save_path = os.path.join(self.save_path, 'inference', self.cfg['Arch']['name'])
+        assert self.cfg['Global'].get('img_size', False), ".yaml文件中Global必须设置img_size参数"
+        model = paddle.jit.to_static(
+            model,
+            input_spec=[
+                paddle.static.InputSpec(
+                    shape=[None]+self.cfg['Global']['img_size'],
+                    dtype='float32'
+                )
+            ]
+        )
+        paddle.jit.save(model, save_path)
+        self.train_logger.info(f"Export succeeded! The inferenece model exported has been saved in {save_path}")
+
+
+
+class ExportModel(nn.Layer):
+    def __init__(self, model):
+        super(ExportModel, self).__init__()
+        self.model = model
+
+    def forward(self, x):
+        return self.model(x)

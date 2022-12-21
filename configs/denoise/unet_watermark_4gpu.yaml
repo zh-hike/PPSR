@@ -11,6 +11,7 @@ Global:
   step_per_epoch: 2000
   print_batch_step: 50
   bar_disable: true
+  img_size: [3, 512, 512]
   schedule_update_by: step
   trainer: unet_denoise
 
@@ -67,6 +68,8 @@ Data:
         shuffle: true
         drop_last: true
 
+  Test:
+    path: ../dataset/watermark/data/test_make_A
 
 Loss:
   Train:
