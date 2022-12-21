@@ -1,0 +1,105 @@
+Global:
+  checkoutpoints: null
+  pretrained_model: null
+  output_dir: ./output
+  save_interval: -1
+  dist: true
+  save_interval_step: 200 
+  eval_during_train: true
+  eval_interval: 1
+  epochs: 2048
+  step_per_epoch: 2000
+  print_batch_step: 50
+  bar_disable: true
+  img_size: [3, 512, 512]
+  schedule_update_by: step
+  trainer: unet_denoise
+
+Arch:
+  name: UNet
+  use_sync_bn: true
+  num_classes: 3
+
+Data:
+  
+  Train:
+    Dataset:
+      name: WaterMark
+      noise_data: ../dataset/watermark/data/train/watermark_scripts/train_dataset
+      clean_data: ../dataset/watermark/data/train/bg_pics
+
+      ops:
+        - RandomCrop:
+            size: 512
+            padding: 128
+            pad_if_needed: true
+            padding_mode: reflect
+        - ToTensor:
+            data_format: CHW
+    
+    DataLoader:
+      num_workers: 4
+      batch_sampler:
+        name: DistributedBatchSampler
+        batch_size: 6
+        shuffle: true
+        drop_last: true
+
+  Eval:
+    Dataset:
+      name: WaterMark
+      noise_data: ../dataset/watermark/data/train/watermark_scripts/generate_testdata
+      clean_data: ../dataset/watermark/data/train/bg_pics
+
+      ops:
+        - RandomCrop:
+            size: 512
+            padding: 128
+            pad_if_needed: true
+            padding_mode: reflect
+        - ToTensor:
+            data_format: CHW
+    
+    DataLoader:
+      num_workers: 4
+      batch_sampler:
+        name: DistributedBatchSampler
+        batch_size: 4
+        shuffle: true
+        drop_last: true
+
+  Test:
+    path: ../dataset/watermark/data/test_make_A
+
+Loss:
+  Train:
+    - PSNRLoss:
+        weight: 0.01
+    - MS_SSIMLoss:
+        weight: 1
+        data_range: 1
+
+  Eval:
+    - PSNRLoss:
+        weight: 0.01
+    - MS_SSIMLoss:
+        weight: 1
+        data_range: 1
+
+Optimizer:
+  name: Adam
+  learning_rate:
+    name: CosineAnnealingDecay
+    T_max: 10
+    learning_rate: 0.001
+
+Metric:
+  save_rely_metric: Score
+  Eval:
+    - Score:
+        PSNR:
+          weight: 0.005
+          data_range: 1
+        MSSSIM:
+          weight: 0.5
+          data_range: 1
