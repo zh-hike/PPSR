@@ -151,7 +151,6 @@ class Engine:
         self.train_logger.info(f"Export succeeded! The inferenece model exported has been saved in {save_path}")
 
 
-
 class ExportModel(nn.Layer):
     def __init__(self, model):
         super(ExportModel, self).__init__()

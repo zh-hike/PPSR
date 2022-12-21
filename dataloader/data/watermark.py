@@ -16,5 +16,3 @@ class WaterMark(BaseDataset):
             self.noise_imgs.append(os.path.join(noise_data, noise_img_file))
             clean_img_file = noise_img_file.split('_')[0]+'.jpg'
             self.clean_imgs.append(os.path.join(clean_data, clean_img_file))
-
-        

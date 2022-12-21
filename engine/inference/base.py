@@ -16,4 +16,3 @@ def inference_epoch_base(save_path, inference_model_path, test_path, img_size):
             pred = model(batch_img)
             new_img = concat_image(pred, *params)
             new_img.save(os.path.join(save_path, filename))
-

@@ -36,5 +36,3 @@ def build_loss(config, mode='train'):
         cfg = cfg['Loss']['Eval']
 
     return CombineLoss(cfg)
-    
-    

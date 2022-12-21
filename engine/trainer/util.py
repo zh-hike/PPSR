@@ -24,6 +24,3 @@ def save_checkoutpoints(engine, epoch_id, iter_id):
                    'iter_id': iter_id,
                    }
     paddle.save(checkpoints, f'./checkpoints/{engine._name}.checkpoints')
-
-    
-

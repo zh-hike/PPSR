@@ -22,5 +22,3 @@ def eval_epoch_base(engine, **kwargs):
 
         engine.time_info['batch_cost'].update(time.time() - start_time)
         start_time = time.time()
-
-    

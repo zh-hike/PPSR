@@ -24,5 +24,3 @@ if __name__ == "__main__":
     save_path = os.path.join(cfg['Global'].get('output_dir', './output'), cfg['Arch']['name'], 'Img')
     inference_model_path = os.path.join(cfg['Global'].get('output_dir', './output'), cfg['Arch']['name'], 'inference', cfg['Arch']['name'])
     inference_epoch_base(save_path, inference_model_path, cfg['Data']['Test']['path'], cfg['Global']['img_size'])
-    
-    

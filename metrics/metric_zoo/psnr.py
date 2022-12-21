@@ -15,4 +15,3 @@ class PSNR(nn.Layer):
         psnr = 10*paddle.log10(255*255/mse)
         
         return psnr.item()
-

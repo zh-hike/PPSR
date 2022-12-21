@@ -23,6 +23,4 @@ class Score(nn.Layer):
             results[func.__class__.__name__] = metric
 
         results['Score'] = score
-        return results 
-        
-
+        return results
