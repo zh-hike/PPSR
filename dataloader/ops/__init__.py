@@ -20,4 +20,3 @@ def transforms(img1, img2=None, ops=None):
         return img1, img2
     else:
         return img1
-

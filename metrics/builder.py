@@ -30,4 +30,3 @@ def build_metric(config, mode='train'):
     else:
         assert cfg['Metric'].get('Eval', False) != False, "评估必须设置验证参数"
         return CombineMetric(cfg['Metric']['Eval'])
-
