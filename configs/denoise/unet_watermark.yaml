@@ -3,7 +3,7 @@ Global:
   pretrained_model: null
   output_dir: ./output
   save_interval: -1
-  dist: false
+  dist: true
   save_interval_step: 200 
   eval_during_train: true
   eval_interval: 1
@@ -17,6 +17,7 @@ Global:
 
 Arch:
   name: UNet
+  use_sync_bn: true
   num_classes: 3
 
 Data:
@@ -24,8 +25,8 @@ Data:
   Train:
     Dataset:
       name: WaterMark
-      noise_data: ../dataset/watermark/data/train/watermark_scripts/train_dataset
-      clean_data: ../dataset/watermark/data/train/bg_pics
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/train_index.txt
 
       ops:
         - RandomCrop:
@@ -47,8 +48,8 @@ Data:
   Eval:
     Dataset:
       name: WaterMark
-      noise_data: ../dataset/watermark/data/train/watermark_scripts/generate_testdata
-      clean_data: ../dataset/watermark/data/train/bg_pics
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/val_index.txt
 
       ops:
         - RandomCrop:
@@ -77,6 +78,8 @@ Loss:
     - MS_SSIMLoss:
         weight: 1
         data_range: 1
+    - L1Loss:
+        weight: 1
 
   Eval:
     - PSNRLoss:
@@ -84,6 +87,8 @@ Loss:
     - MS_SSIMLoss:
         weight: 1
         data_range: 1
+    - L1Loss:
+        weight: 1
 
 Optimizer:
   name: Adam

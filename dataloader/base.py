@@ -1,6 +1,7 @@
 from PIL import Image
 from paddle.io import Dataset
 from .ops import transforms
+import os
 
 
 class BaseDataset(Dataset):
@@ -9,6 +10,15 @@ class BaseDataset(Dataset):
         self.noise_imgs = []
         self.ops = ops
 
+    def _load_anno(self, index_file, data_root):
+        file = open(index_file, 'r')
+        for line in file.readlines():
+            noise_img, cls_img = line.strip().split()
+            noise_img = os.path.join(data_root, noise_img.strip())
+            cls_img = os.path.join(data_root, cls_img.strip())
+            self.noise_imgs.append(noise_img)
+            self.clean_imgs.append(cls_img)
+        file.close()
 
     def __getitem__(self, idx):
         
