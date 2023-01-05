@@ -7,7 +7,7 @@ Global:
   save_interval_step: 200 
   eval_during_train: true
   eval_interval: 1
-  epochs: 2048
+  epochs: 100
   step_per_epoch: 2000
   print_batch_step: 50
   bar_disable: true
@@ -38,10 +38,10 @@ Data:
             data_format: CHW
     
     DataLoader:
-      num_workers: 4
+      num_workers: 2
       batch_sampler:
         name: DistributedBatchSampler
-        batch_size: 6
+        batch_size: 12
         shuffle: true
         drop_last: true
 
@@ -61,10 +61,10 @@ Data:
             data_format: CHW
     
     DataLoader:
-      num_workers: 4
+      num_workers: 2
       batch_sampler:
         name: DistributedBatchSampler
-        batch_size: 4
+        batch_size: 12
         shuffle: true
         drop_last: true
 
