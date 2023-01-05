@@ -5,14 +5,9 @@ import os
 
 class WaterMark(BaseDataset):
     def __init__(self,
-                 clean_data,
-                 noise_data,
+                 data_root,
+                 index_file,
                  ops=None):
         
         super(WaterMark, self).__init__(ops=ops)
-        self.clean_imgs = []
-        self.noise_imgs = []
-        for noise_img_file in os.listdir(noise_data):
-            self.noise_imgs.append(os.path.join(noise_data, noise_img_file))
-            clean_img_file = noise_img_file.split('_')[0]+'.jpg'
-            self.clean_imgs.append(os.path.join(clean_data, clean_img_file))
+        super()._load_anno(index_file, data_root)

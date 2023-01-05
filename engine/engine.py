@@ -22,6 +22,7 @@ class Engine:
     def __init__(self, cfg):
         self.cfg = cfg
         self._name = f"{cfg['Arch']['name']}_{cfg['Data']['Train']['Dataset']['name']}"
+        paddle.device.set_device("gpu")
         # 准备
         self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])
         os.makedirs(self.save_path, exist_ok=True)

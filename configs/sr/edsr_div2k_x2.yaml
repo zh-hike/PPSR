@@ -1,0 +1,21 @@
+Global:
+  checkoutpoints: null
+  pretrained_model: null
+  output_dir: ./output
+  save_interval: -1
+  dist: true
+  save_interval_step: 200 
+  eval_during_train: true
+  eval_interval: 1
+  epochs: 2048
+  step_per_epoch: 2000
+  print_batch_step: 50
+  bar_disable: true
+  img_size: [3, 512, 512]
+  schedule_update_by: step
+  trainer: edsr_sr
+
+Arch:
+  name: EDSR
+  use_sync_bn: true
+  
