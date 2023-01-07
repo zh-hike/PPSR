@@ -1,19 +1,19 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output
+  output_dir: ./output/denoise/
   save_interval: -1
   dist: true
   save_interval_step: 200 
   eval_during_train: true
   eval_interval: 1
   epochs: 100
-  step_per_epoch: 2000
+  step_per_epoch: 100
   print_batch_step: 50
   bar_disable: true
   img_size: [3, 512, 512]
   schedule_update_by: step
-  trainer: unet_denoise
+  trainer: common
 
 Arch:
   name: UNet
@@ -51,24 +51,14 @@ Data:
       name: WaterMark
       data_root: ../dataset/watermark/data/train
       index_file: ../dataset/watermark/data/train/val_index.txt
-
-      ops:
-        - RandomCrop:
-            size: 512
-            padding: 128
-            pad_if_needed: true
-            padding_mode: reflect
-        - ToTensor:
-            data_format: CHW
     
     DataLoader:
-      num_workers: 2
+      num_workers: 4
       use_shared_memory: true
       batch_sampler:
-        name: DistributedBatchSampler
-        batch_size: 12
-        shuffle: true
-        drop_last: true
+        name: BatchSampler
+        batch_size: 1
+        shuffle: false
 
   Test:
     path: ../dataset/watermark/data/test_make_A

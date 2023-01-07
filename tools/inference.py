@@ -23,4 +23,7 @@ if __name__ == "__main__":
     cfg = parse_args()
     save_path = os.path.join(cfg['Global'].get('output_dir', './output'), cfg['Arch']['name'], 'Img')
     inference_model_path = os.path.join(cfg['Global'].get('output_dir', './output'), cfg['Arch']['name'], 'inference', cfg['Arch']['name'])
-    inference_epoch_base(save_path, inference_model_path, cfg['Data']['Test']['path'], cfg['Global']['img_size'])
+    img_size = cfg['Global']['img_size'][1:]
+    scale = cfg['Global'].get('scale', 1)
+    rgb_range = cfg['Global'].get('rgb_range', 1)
+    inference_epoch_base(save_path, inference_model_path, cfg['Data']['Test']['path'], img_size, scale=scale, rgb_range=rgb_range)

@@ -1,6 +1,8 @@
 from .metric_zoo import *
 import paddle.nn as nn
 import copy
+import paddle
+from paddle import distributed as dist
 
 
 class CombineMetric(nn.Layer):
@@ -15,8 +17,17 @@ class CombineMetric(nn.Layer):
     def forward(self, pred, real):
         results = {}
         for func in self.metric_func:
-            results.update(func(pred, real))
-
+            metric_results = func(pred, real)
+            if dist.get_world_size() == 1:
+                results.update(metric_results)
+            else:
+                new_results = {}
+                for key in metric_results:
+                    tensor_list = []
+                    dist.all_gather(tensor_list, metric_results[key])
+                    new_results[key] = paddle.concat(tensor_list).mean()
+                results.update(new_results)
+                
         return results
 
 

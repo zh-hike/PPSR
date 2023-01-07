@@ -20,6 +20,11 @@ class BaseDataset(Dataset):
             self.clean_imgs.append(cls_img)
         file.close()
 
+    def data_expand(self, data_expand=None):
+        if data_expand is not None:
+            self.clean_imgs = self.clean_imgs * data_expand
+            self.noise_imgs = self.noise_imgs * data_expand
+
     def __getitem__(self, idx):
         
         clean_img = self.clean_imgs[idx]

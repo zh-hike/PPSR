@@ -1,19 +1,21 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output
+  output_dir: ./output/sr/X2/
   save_interval: -1
-  dist: false
-  save_interval_step: 200
+  dist: true
+  save_interval: -1
   eval_during_train: true
   eval_interval: 1
   epochs: 1000
-  step_per_epoch: 2000
-  print_batch_step: 50
+  step_per_epoch: 100
+  print_batch_step: 25
   bar_disable: true
   img_size: [3, 512, 512]
-  schedule_update_by: step
-  trainer: edsr
+  schedule_update_by: epoch
+  rgb_range: 255.0
+  trainer: common
+  scale: 2
 
 Arch:
   name: EDSR
@@ -23,7 +25,7 @@ Arch:
   n_colors: 3
   res_scale: 1.0
   scale: 2
-  rgb_range: 255
+  rgb_range: 255.0
 
 Data:
   Train:
@@ -31,46 +33,42 @@ Data:
       name: DIV2K
       data_root: /mnt/zh/dataset/div2k/DIV2K
       index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
-
+      data_expand: 10
       ops:
         - RandomCrop:
             size: 96
             pad_if_needed: true
             padding_mode: reflect
+            target_scale: 2
         - ToTensor:
             data_format: CHW
+            rgb_range: 255.0
     
     DataLoader:
-      num_workers: 2
+      num_workers: 4
       use_shared_memory: true
+      prefetch_factor: 16
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 16
-        shuffle: true
-        drop_last: true
+        shuffle: false
+        drop_last: false
         
 
   Eval:
     Dataset:
-      name: DIV2K
+      name: ValDataset
       data_root: /mnt/zh/dataset/div2k/DIV2K
       index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
-      ops:
-        - RandomCrop:
-            size: 96
-            pad_if_needed: true
-            padding_mode: reflect
-        - ToTensor:
-            data_format: CHW
 
     DataLoader:
-      num_workers: 2
+      num_workers: 4
       use_shared_memory: true
       batch_sampler:
-        name: DistributedBatchSampler
-        batch_size: 16
-        shuffle: true
-        drop_last: true
+        name: BatchSampler
+        batch_size: 1
+        shuffle: false
+
   Test:
     path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
 
@@ -84,20 +82,22 @@ Loss:
         weight: 1
 
 Optimizer:
-  name: Momentum
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  grad_clip: 0.
   learning_rate:
     name: MultiStepDecay
-    milestones: [200]
+    milestones: [50]
     gamma: 0.5
-    learning_rate: 0.0001
+    learning_rate: 0.0002
 
 Metric:
-  save_rely_metric: Score
+  save_rely_metric: PSNR
   Eval:
-    - Score:
-        PSNR:
-          weight: 0.005
-          data_range: 1
-        MSSSIM:
-          weight: 0.5
-          data_range: 1
+    - PSNR:
+        weight: 1
+        data_range: 255
+    - SSIM:
+        weight: 1
+        data_range: 255

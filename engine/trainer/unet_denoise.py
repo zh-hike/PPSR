@@ -37,7 +37,6 @@ def train_epoch_unet_denoise(engine, epoch_id, iter_start=0):
 
         engine.time_info['batch_cost'].update(time.time() - start_time)
         start_time = time.time()
-        engine.save_checkpoints(epoch_id, iter_id)
 
 
     if engine.schedule_update_by == 'epoch':

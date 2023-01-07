@@ -2,14 +2,32 @@ import math
 import paddle
 import paddle.nn as nn
 import paddle.nn.functional as F
+import math
+import collections.abc
 
+def _calculate_fan_in_fan_out(shape):
+    assert isinstance(shape, collections.abc.Iterable), "shape must be a iterable"
+    num_input_fmaps = shape[1]
+    num_output_fmaps = shape[0]
+    receptive_field_size = 1
+    for s in shape[2:]:
+        receptive_field_size *= s
+    fan_in = num_input_fmaps * receptive_field_size
+    fan_out = num_output_fmaps * receptive_field_size
+    return fan_in, fan_out
 
 def default_conv(in_channels, out_channels, kernel_size, bias=True):
+    fan_in, _ = _calculate_fan_in_fan_out((out_channels, in_channels, kernel_size, kernel_size))
+    bound = 1 / math.sqrt(fan_in)
+    bias_init = nn.initializer.Uniform(-bound, bound) if bias else bias
+    
     return nn.Conv2D(in_channels=in_channels, 
                      out_channels=out_channels,
                      kernel_size=kernel_size,
                      padding=(kernel_size//2),
-                     bias_attr=bias)
+                     bias_attr=bias_init,
+                     weight_attr=nn.initializer.KaimingUniform(negative_slope=math.sqrt(5), nonlinearity='leaky_relu')
+                     )
 
 class MeanShift(nn.Conv2D):
     def __init__(self,
@@ -55,35 +73,18 @@ class ResBlock(nn.Layer):
         super(ResBlock, self).__init__()
         m = []
         for i in range(2):
-            m.append(nn.Conv2D(n_feats, n_feats, kernel_size=kernel_size, bias_attr=True, padding=1))
-            # m.append(conv(n_feats, n_feats, kernel_size, bias=bias))
+            m.append(conv(n_feats, n_feats, kernel_size, bias=bias))
             if bn:
                 m.append(nn.BatchNorm2D(n_feats))
             if i == 0:
                 m.append(act)
         
-        # self.body = nn.Sequential(*m)
-        self.body = nn.LayerList(m)
+        self.body = nn.Sequential(*m)
         self.res_scale = res_scale
 
     def forward(self, x):
-        from reprod_log import ReprodLogger
-        log = ReprodLogger()
-        log.add('x', x.detach().cpu().numpy())
-        res = x
-        print(res)
-        for i, layer in enumerate(self.body):
-            res = layer(res)
-            print(res)
-            assert 1==0
-            log.add(f'res_{i}', res.numpy())
-        res *= self.res_scale
-        # res = self.body(x) * self.res_scale
-        log.add('res', res.detach().cpu().numpy())
+        res = self.body(x) * self.res_scale
         res += x
-        log.add('res+x', res.detach().cpu().numpy())
-        log.save('/mnt/zh/align/edsr/paddle/ResBlock')
-        assert 1==0
         return res
 
 
