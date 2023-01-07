@@ -39,6 +39,7 @@ Data:
     
     DataLoader:
       num_workers: 2
+      use_shared_memory: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 12
@@ -62,6 +63,7 @@ Data:
     
     DataLoader:
       num_workers: 2
+      use_shared_memory: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 12

@@ -3,19 +3,101 @@ Global:
   pretrained_model: null
   output_dir: ./output
   save_interval: -1
-  dist: true
-  save_interval_step: 200 
+  dist: false
+  save_interval_step: 200
   eval_during_train: true
   eval_interval: 1
-  epochs: 2048
+  epochs: 1000
   step_per_epoch: 2000
   print_batch_step: 50
   bar_disable: true
   img_size: [3, 512, 512]
   schedule_update_by: step
-  trainer: edsr_sr
+  trainer: edsr
 
 Arch:
   name: EDSR
   use_sync_bn: true
+  n_resblocks: 16
+  n_feats: 64
+  n_colors: 3
+  res_scale: 1.0
+  scale: 2
+  rgb_range: 255
+
+Data:
+  Train:
+    Dataset:
+      name: DIV2K
+      data_root: /mnt/zh/dataset/div2k/DIV2K
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
+
+      ops:
+        - RandomCrop:
+            size: 96
+            pad_if_needed: true
+            padding_mode: reflect
+        - ToTensor:
+            data_format: CHW
+    
+    DataLoader:
+      num_workers: 2
+      use_shared_memory: true
+      batch_sampler:
+        name: DistributedBatchSampler
+        batch_size: 16
+        shuffle: true
+        drop_last: true
+        
+
+  Eval:
+    Dataset:
+      name: DIV2K
+      data_root: /mnt/zh/dataset/div2k/DIV2K
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+      ops:
+        - RandomCrop:
+            size: 96
+            pad_if_needed: true
+            padding_mode: reflect
+        - ToTensor:
+            data_format: CHW
+
+    DataLoader:
+      num_workers: 2
+      use_shared_memory: true
+      batch_sampler:
+        name: DistributedBatchSampler
+        batch_size: 16
+        shuffle: true
+        drop_last: true
+  Test:
+    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+
+Loss:
+  Train:
+    - L1Loss:
+        weight: 1
   
+  Eval:
+    - L1Loss:
+        weight: 1
+
+Optimizer:
+  name: Momentum
+  learning_rate:
+    name: MultiStepDecay
+    milestones: [200]
+    gamma: 0.5
+    learning_rate: 0.0001
+
+Metric:
+  save_rely_metric: Score
+  Eval:
+    - Score:
+        PSNR:
+          weight: 0.005
+          data_range: 1
+        MSSSIM:
+          weight: 0.5
+          data_range: 1
