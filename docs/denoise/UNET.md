@@ -41,7 +41,7 @@ watermark_scripts/generate_testdata/1810_0.jpg bg_pics/1810.jpg
 ```
 
 ## 3. 训练
-此模型支持单机单卡和单机多卡训练，以下使用`UNet`跑`denoise`举例。
+此模型支持单机单卡和单机多卡训练，以下使用`UNet`跑`denoise`举例。（此次实验默认在单机双卡 2x3090 上运行的结果）
 ### 3.1 单机单卡
 ```
 python tools/train.py -c ./configs/denoise/unet_watermark.yaml
@@ -49,7 +49,7 @@ python tools/train.py -c ./configs/denoise/unet_watermark.yaml
 
 ### 3.2 单机多卡
 ```
-python -m paddle.distributed.launch --gpus=0,1,2,3 tools/train.py -c ./configs/denoise/unet_watermark.yaml
+python -m paddle.distributed.launch --gpus=0,1 tools/train.py -c ./configs/denoise/unet_watermark.yaml
 ```
 
 所有的训练日志都默认保存在 `./output/UNet/train.log`
@@ -82,30 +82,30 @@ python -m paddle.distributed.launch --gpus=0,1,2,3 tools/train.py -c ./configs/d
 </table>
 
 ## 5. 评估
-此模型支持单机单卡和单机多卡评估，以下使用`UNet`跑`denoise`举例，生成的模型位置在`/output/UNet/best_model.pdparams`
+此模型支持单机单卡和单机多卡评估，以下使用`UNet`跑`denoise`举例，生成的模型位置在`/output/denoise/UNet/best_model.pdparams`
 ### 5.1 单机单卡
 ```
-python tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/UNet/best_model.pdparams
+python tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
 ```
 
 ### 5.2 单机多卡
 ```
-python -m paddle.distributed.launch --gpus=0,1,2,3 tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/UNet/best_model.pdparams
+python -m paddle.distributed.launch --gpus=0,1 tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
 ```
 
-所有的评估日志都默认保存在 `./output/UNet/eval.log`
+所有的评估日志都默认保存在 `./output/denoise/UNet/eval.log`
 
 ## 6. 推理
 ### 6.1 模型导出
-首先需要导出推理模型，例如训练好的模型参数在`./output/UNet/best_model.pdparams`，命令为
+首先需要导出推理模型，例如训练好的模型参数在`./output/denoise/UNet/best_model.pdparams`，命令为
 ```
-python tools/export_model.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/UNet/best_model.pdparams
+python tools/export_model.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
 ```
-模型将自动导出到`./output/UNet/inference`。
+模型将自动导出到`./output/denoise/UNet/inference`。
 
 ### 6.2 模型推理
 模型导出后将使用测试数据集对模型进行推理，例如所有的测试文件都在`./test_data`中，运行命令
 ```
 python tools/inference.py -c ./configs/denoise/unet_watermark.yaml -o Data.Test.path=./test_data
 ```
-模型会将推理的结果放入`./output/UNet/Img`中。
+模型会将推理的结果放入`./output/denoise/UNet/Img`中。

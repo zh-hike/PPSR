@@ -23,13 +23,10 @@ class Engine:
         self.cfg = cfg
         self._name = f"{cfg['Arch']['name']}_{cfg['Data']['Train']['Dataset']['name']}"
         paddle.device.set_device("gpu")
-<<<<<<< HEAD
-=======
         self.mode = mode
         self.save_interval = self.cfg['Global'].get('save_interval', -1)
         paddle.disable_signal_handler()
-
->>>>>>> edsr
+        
         # 准备
         self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])
         os.makedirs(self.save_path, exist_ok=True)
