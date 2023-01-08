@@ -1,21 +1,103 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output
+  output_dir: ./output/sr/X2/
   save_interval: -1
   dist: true
-  save_interval_step: 200 
+  save_interval: -1
   eval_during_train: true
   eval_interval: 1
-  epochs: 2048
-  step_per_epoch: 2000
-  print_batch_step: 50
+  epochs: 1000
+  step_per_epoch: 100
+  print_batch_step: 25
   bar_disable: true
   img_size: [3, 512, 512]
-  schedule_update_by: step
-  trainer: edsr_sr
+  schedule_update_by: epoch
+  rgb_range: 255.0
+  trainer: common
+  scale: 2
 
 Arch:
   name: EDSR
   use_sync_bn: true
+  n_resblocks: 16
+  n_feats: 64
+  n_colors: 3
+  res_scale: 1.0
+  scale: 2
+  rgb_range: 255.0
+
+Data:
+  Train:
+    Dataset:
+      name: DIV2K
+      data_root: /mnt/zh/dataset/div2k/DIV2K
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
+      data_expand: 10
+      ops:
+        - RandomCrop:
+            size: 96
+            pad_if_needed: true
+            padding_mode: reflect
+            target_scale: 2
+        - ToTensor:
+            data_format: CHW
+            rgb_range: 255.0
+    
+    DataLoader:
+      num_workers: 4
+      use_shared_memory: true
+      prefetch_factor: 16
+      batch_sampler:
+        name: DistributedBatchSampler
+        batch_size: 16
+        shuffle: false
+        drop_last: false
+        
+
+  Eval:
+    Dataset:
+      name: ValDataset
+      data_root: /mnt/zh/dataset/div2k/DIV2K
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+
+    DataLoader:
+      num_workers: 4
+      use_shared_memory: true
+      batch_sampler:
+        name: BatchSampler
+        batch_size: 1
+        shuffle: false
+
+  Test:
+    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+
+Loss:
+  Train:
+    - L1Loss:
+        weight: 1
   
+  Eval:
+    - L1Loss:
+        weight: 1
+
+Optimizer:
+  name: Adam
+  beta1: 0.9
+  beta2: 0.999
+  grad_clip: 0.
+  learning_rate:
+    name: MultiStepDecay
+    milestones: [50]
+    gamma: 0.5
+    learning_rate: 0.0002
+
+Metric:
+  save_rely_metric: PSNR
+  Eval:
+    - PSNR:
+        weight: 1
+        data_range: 255
+    - SSIM:
+        weight: 1
+        data_range: 255

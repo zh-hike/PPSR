@@ -1,5 +1,7 @@
 from .augment import RandomCrop, ToTensor
 from PIL import Image
+from .operator import to_pil, split_image, concat_image
+
 
 
 def transforms(img1, img2=None, ops=None):

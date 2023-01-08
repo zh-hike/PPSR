@@ -11,5 +11,5 @@ def log_eval_info(engine):
         loss = engine.eval_loss_info.info
 
     info = f"Eval: {batch_cost}  {read_cost} {loss} {best_metric} {metric_result}\n"
-
+    
     engine.eval_logger.info(info)

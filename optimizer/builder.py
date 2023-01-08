@@ -1,4 +1,4 @@
-from paddle.optimizer import SGD, Adam
+from paddle.optimizer import SGD, Adam, Momentum
 from ._lr import *
 import copy
 

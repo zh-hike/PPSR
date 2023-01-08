@@ -1,5 +1,6 @@
 from .ms_ssim import MSSSIM
 from .psnr import PSNR
+from .ssim import SSIM
 import paddle.nn as nn
 import copy
 
@@ -19,8 +20,8 @@ class Score(nn.Layer):
         results = {}
         for weight, func in zip(self.weights, self.metric_funcs):
             metric = func(pred, real)
-            score += weight * metric
-            results[func.__class__.__name__] = metric
+            score += weight * metric[func.__class__.__name__]
+            results.update(metric)
 
         results['Score'] = score
         return results

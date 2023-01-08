@@ -16,4 +16,4 @@ class MSSSIM(nn.Layer):
     def forward(self, pred, real):
         pred = paddle.clip(pred, -self.data_range, self.data_range)
         assert (real.min().item() >= (-self.data_range)) & (real.max().item() <= self.data_range)
-        return ms_ssim(pred, real, data_range=self.data_range, win_size=self.win_size, **self.cfg)
+        return {"MSSSIM":ms_ssim(pred, real, data_range=self.data_range, win_size=self.win_size)}
