@@ -33,11 +33,19 @@ class Engine:
 
         #  set model
         self.model = build_arch(cfg['Arch'])
-        if self.cfg['Global'].get('pretrained_model', None) is not None:
-            self.model.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']))
         if self.cfg['Global'].get('dist', False):
             dist.init_parallel_env()
             self.model = paddle.DataParallel(self.model)
+        
+        # optimizer
+        self.opt, self.lr = build_optimizer(self, cfg)
+        self.schedule_update_by = cfg['Global'].get('schedule_update_by', 'step')
+        assert self.schedule_update_by in ['step', 'epoch']
+
+        # pretrained model
+        if self.cfg['Global'].get('pretrained_model', None) is not None:
+            self.model.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdparams'))
+            self.opt.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdopt'))
         
         # logger
         output_dir = cfg['Global'].get('output_dir', './output')
@@ -67,10 +75,7 @@ class Engine:
             self.eval_loss_func = build_loss(self.cfg, mode='eval')
             self.eval_loss_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Loss']['Train']]+['loss'])
 
-        # optimizer
-        self.opt, self.lr = build_optimizer(self, cfg)
-        self.schedule_update_by = cfg['Global'].get('schedule_update_by', 'step')
-        assert self.schedule_update_by in ['step', 'epoch']
+        
 
         # metric
         self.best_metric_value = 0
@@ -127,10 +132,10 @@ class Engine:
         assert mode in ['latest', 'best']
         if mode == 'latest':
             model_name = 'latest_model.pdparams'
-            opt_name = 'latest_opt.pdopt'
+            opt_name = 'latest_model.pdopt'
         elif mode == 'best':
             model_name = 'best_model.pdparams'
-            opt_name = 'best_opt.pdopt'
+            opt_name = 'best_model.pdopt'
         paddle.save(self.model.state_dict(), os.path.join(self.cfg['Global']['output_dir'], self.cfg['Arch']['name'], model_name))
         paddle.save(self.opt.state_dict(), os.path.join(self.cfg['Global']['output_dir'], self.cfg['Arch']['name'], opt_name))
         if epoch_id:

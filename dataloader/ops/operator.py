@@ -8,8 +8,8 @@ from paddle.vision.transforms import functional as F
 def to_pil(tensor, rgb_range=1.) -> Image.Image:
     assert isinstance(tensor, paddle.Tensor)
     d = tensor.numpy()
-    d = np.uint8(d*255/rgb_range).transpose(1,2,0)
-    d = np.clip(d, 0, 255)
+    d = np.clip(d*255./rgb_range, 0, 255)
+    d = np.uint8(d).transpose(1,2,0)
     img = Image.fromarray(d)
     return img
 

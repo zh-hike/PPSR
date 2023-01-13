@@ -48,15 +48,16 @@ Data:
 
   Eval:
     Dataset:
-      name: WaterMark
+      name: ValDataset
       data_root: ../dataset/watermark/data/train
       index_file: ../dataset/watermark/data/train/val_index.txt
     
     DataLoader:
       num_workers: 4
       use_shared_memory: true
+      prefetch_factor: 2
       batch_sampler:
-        name: BatchSampler
+        name: DistributedBatchSampler
         batch_size: 1
         shuffle: false
 

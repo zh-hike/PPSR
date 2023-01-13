@@ -75,7 +75,7 @@ class RandomCrop(BaseTransform):
 
 
 class ToTensor(BaseTransform):
-    def __init__(self, data_format="CHW", rgb_range=255., keys=None):
+    def __init__(self, data_format="CHW", rgb_range=1., keys=None):
         super(ToTensor, self).__init__(keys)
         self.data_format = data_format
         self.rgb_range = rgb_range

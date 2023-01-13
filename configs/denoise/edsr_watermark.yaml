@@ -1,7 +1,7 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output/sr/X2/
+  output_dir: ./output/denoise/
   save_interval: -1
   dist: true
   save_interval: -1
@@ -11,11 +11,11 @@ Global:
   step_per_epoch: 200
   print_batch_step: 25
   bar_disable: true
-  img_size: [3, 512, 512]
+  img_size: [3, 128, 128]
   schedule_update_by: epoch
-  rgb_range: 255.0
+  rgb_range: &rgb_range 255.0
   trainer: common
-  scale: 2
+  scale: &scale 1
 
 Arch:
   name: EDSR
@@ -24,25 +24,24 @@ Arch:
   n_feats: 64
   n_colors: 3
   res_scale: 1.0
-  scale: 2
-  rgb_range: 255.0
+  scale: *scale
+  rgb_range: *rgb_range
 
 Data:
   Train:
     Dataset:
-      name: DIV2K
-      data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
-      data_expand: 20
+      name: WaterMark
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/train_index.txt
       ops:
         - RandomCrop:
             size: 96
             pad_if_needed: true
             padding_mode: reflect
-            target_scale: 2
+            target_scale: *scale
         - ToTensor:
             data_format: CHW
-            rgb_range: 255.0
+            rgb_range: *rgb_range
     
     DataLoader:
       num_workers: 8
@@ -58,8 +57,8 @@ Data:
   Eval:
     Dataset:
       name: ValDataset
-      data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/val_index.txt
 
     DataLoader:
       num_workers: 8
@@ -71,7 +70,7 @@ Data:
         shuffle: false
 
   Test:
-    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+    path: ../dataset/watermark/data/test_make_A
 
 Loss:
   Train:
@@ -79,6 +78,11 @@ Loss:
         weight: 1
   
   Eval:
+    # - PSNRLoss:
+    #     weight: 1
+    # - MS_SSIMLoss:
+    #     weight: 1
+    #     data_range: *rgb_range
     - L1Loss:
         weight: 1
 
@@ -89,16 +93,17 @@ Optimizer:
   grad_clip: 0.
   learning_rate:
     name: MultiStepDecay
-    milestones: [50]
+    milestones: [5, 10, 20]
     gamma: 0.5
     learning_rate: 0.0004
 
 Metric:
-  save_rely_metric: PSNR
+  save_rely_metric: Score
   Eval:
-    - PSNR:
-        weight: 1
-        data_range: 255
-    - SSIM:
-        weight: 1
-        data_range: 255
+    - Score:
+        PSNR:
+          weight: 0.005
+          data_range: *rgb_range
+        MSSSIM:
+          weight: 0.5
+          data_range: *rgb_range

@@ -2,6 +2,7 @@ from PIL import Image
 from paddle.io import Dataset
 from .ops import transforms
 import os
+from utils.util import read_img
 
 
 class BaseDataset(Dataset):
@@ -9,6 +10,8 @@ class BaseDataset(Dataset):
         self.clean_imgs = []
         self.noise_imgs = []
         self.ops = ops
+
+        
     def _load_anno(self, index_file, data_root):
         file = open(index_file, 'r')
         for line in file.readlines():
@@ -28,10 +31,12 @@ class BaseDataset(Dataset):
         
         clean_img = self.clean_imgs[idx]
         noise_img = self.noise_imgs[idx]
-        clean_img = Image.open(clean_img)
-        noise_img = Image.open(noise_img)
+
+        clean_img = read_img(clean_img)
+        noise_img = read_img(noise_img)
 
         noise_img, clean_img = transforms(noise_img, clean_img, self.ops)
+        
         return noise_img, clean_img
 
     def __len__(self):

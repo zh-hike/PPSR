@@ -3,6 +3,7 @@ import time
 from PIL import Image
 from dataloader.ops import split_image, concat_image, ToTensor
 from ..util import prepare_before_inference
+from utils.util import read_img
 
 
 @paddle.no_grad()
@@ -21,13 +22,15 @@ def eval_epoch_base(engine, **kwargs):
 
     for batch, (inputs, targets) in enumerate(zip(noise_imgs, clean_imgs)):
         engine.time_info['read_cost'].update(time.time() - start_time)
-        noise_img = Image.open(inputs)
-        target_img = Image.open(targets)
+        
+        noise_img = read_img(inputs)
+        target_img = read_img(targets)
         targets = to_tensor(target_img)
         batch_noise_imgs, params = prepare_before_inference(noise_img, size=size, rgb_range=rgb_range, scale=scale)
+
         batch_noise_imgs = batch_noise_imgs
         pred = engine.model(batch_noise_imgs)
-        pred = concat_image(pred, *params, need_to_pil=False)
+        pred = concat_image(pred, *params, rgb_range=rgb_range, need_to_pil=False)
         if getattr(engine, "eval_loss_func", False):
             loss = engine.eval_loss_func(pred.unsqueeze(0), targets.unsqueeze(0))
             engine.eval_loss_info.update(loss)

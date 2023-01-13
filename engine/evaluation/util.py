@@ -6,7 +6,7 @@ def log_eval_info(engine):
     read_cost = engine.time_info['read_cost'].info
     metric_result = engine.eval_metric_info.info
     loss = ""
-    best_metric = "best_metric: %.5f " % engine.best_metric_value
+    best_metric = "best_metric: %.4f " % engine.best_metric_value
     if getattr(engine, "eval_loss_info"):
         loss = engine.eval_loss_info.info
 
