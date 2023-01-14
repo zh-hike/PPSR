@@ -35,14 +35,25 @@ class Engine:
 
         #  set model
         self.model = build_arch(cfg['Arch'])
-        if self.cfg['Global'].get('dist', False):
-            dist.init_parallel_env()
-            self.model = paddle.DataParallel(self.model)
         
         # optimizer
         self.opt, self.lr = build_optimizer(self, cfg)
         self.schedule_update_by = cfg['Global'].get('schedule_update_by', 'step')
         assert self.schedule_update_by in ['step', 'epoch']
+
+        # AMP
+        self.amp = cfg.get('AMP', False)
+        if self.amp:
+            self.amp_level = cfg['AMP'].get('level', 'O1')
+            self.scale_loss = cfg['AMP'].get('init_loss_scaling', 32768.0)
+            self.grad_scaler = paddle.amp.GradScaler(init_loss_scaling=self.scale_loss,
+                                                     use_dynamic_loss_scaling=cfg['AMP'].get('use_dynamic_loss_scaling', True))
+            self.model, self.opt = paddle.amp.decorate(self.model, self.opt, level=self.amp_level)
+
+        # distributed train
+        if self.cfg['Global'].get('dist', False):
+            dist.init_parallel_env()
+            self.model = paddle.DataParallel(self.model)
 
         # pretrained model
         if self.cfg['Global'].get('pretrained_model', None) is not None:
@@ -95,7 +106,10 @@ class Engine:
         for epoch_id in tqdm(range(1, self.cfg['Global']['epochs'] + 1), ncols=90, disable=bar_disable):
             
             self.train_func(self, epoch_id)
-            self.eval()
+            if self.cfg['Global'].get('eval_during_train', True):
+                eval_interval = self.cfg['Global'].get('eval_interval', 1)
+                if epoch_id % eval_interval == 0:
+                    self.eval()
             self.save_model('latest')
             if epoch_id % self.save_interval == 0 and self.save_interval != -1:
                 self.save_model(epoch_id=epoch_id)

@@ -4,7 +4,6 @@ Global:
   output_dir: ./output/sr/X2/
   save_interval: -1
   dist: true
-  save_interval: -1
   eval_during_train: true
   eval_interval: 1
   epochs: 500
@@ -16,6 +15,11 @@ Global:
   rgb_range: &rgb_range 255.0
   trainer: common
   scale: &scale 2
+
+AMP:
+  level: O1
+  init_loss_scaling: 65536.
+  use_dynamic_loss_scaling: true
 
 Arch:
   name: EDSR

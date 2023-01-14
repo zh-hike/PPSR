@@ -21,13 +21,25 @@ def train_epoch_common(engine, epoch_id, iter_start=1):
 
         inputs, targets = batch
         engine.time_info['read_cost'].update(time.time() - start_time)
-        pred = engine.model(inputs)
-        loss_dict = engine.train_loss_func(pred, targets)
+
+        if engine.amp:
+            with paddle.amp.auto_cast(level=engine.amp_level):
+                pred = engine.model(inputs)
+                loss_dict = engine.train_loss_func(pred, targets)
+        else:
+            pred = engine.model(inputs)
+            loss_dict = engine.train_loss_func(pred, targets)
+
         loss = loss_dict['loss']
-        
         engine.opt.clear_grad()
-        loss.backward()
-        engine.opt.step()
+        if engine.amp:
+            scaled = engine.grad_scaler.scale(loss)
+            scaled.backward()
+            engine.grad_scaler.minimize(engine.opt, scaled)
+        else:
+            loss.backward()
+            engine.opt.step()
+
         engine.train_loss_info.update(loss_dict)
         if engine.schedule_update_by == 'step':
             engine.lr.step()
