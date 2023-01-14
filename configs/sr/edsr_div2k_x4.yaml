@@ -1,7 +1,7 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output/sr/X2/
+  output_dir: ./output/sr/X4/
   save_interval: -1
   dist: true
   save_interval: -1
@@ -15,7 +15,7 @@ Global:
   schedule_update_by: epoch
   rgb_range: &rgb_range 255.0
   trainer: common
-  scale: &scale 2
+  scale: &scale 4
 
 Arch:
   name: EDSR

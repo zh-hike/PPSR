@@ -20,12 +20,14 @@ from metrics.builder import build_metric
 
 class Engine:
     def __init__(self, cfg, mode="train"):
+        # Global
         self.cfg = cfg
         self._name = f"{cfg['Arch']['name']}_{cfg['Data']['Train']['Dataset']['name']}"
         paddle.device.set_device("gpu")
         self.mode = mode
         self.save_interval = self.cfg['Global'].get('save_interval', -1)
         paddle.disable_signal_handler()
+        self.eval_bar_disable = cfg['Global'].get('eval_bar_disable', True)
         
         # 准备
         self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])

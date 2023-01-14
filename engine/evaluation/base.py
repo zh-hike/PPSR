@@ -4,6 +4,7 @@ from PIL import Image
 from dataloader.ops import split_image, concat_image, ToTensor
 from ..util import prepare_before_inference
 from utils.util import read_img
+from tqdm import tqdm
 
 
 @paddle.no_grad()
@@ -19,8 +20,7 @@ def eval_epoch_base(engine, **kwargs):
     to_tensor = ToTensor(rgb_range=engine.rgb_range)
     size = engine.cfg['Global']['img_size'][1:]
     rgb_range = engine.rgb_range
-
-    for batch, (inputs, targets) in enumerate(zip(noise_imgs, clean_imgs)):
+    for batch, (inputs, targets) in enumerate(tqdm(zip(noise_imgs, clean_imgs), total=len(noise_imgs), disable=engine.eval_bar_disable, ncols=100)):
         engine.time_info['read_cost'].update(time.time() - start_time)
         
         noise_img = read_img(inputs)
@@ -30,6 +30,7 @@ def eval_epoch_base(engine, **kwargs):
 
         batch_noise_imgs = batch_noise_imgs
         pred = engine.model(batch_noise_imgs)
+
         pred = concat_image(pred, *params, rgb_range=rgb_range, need_to_pil=False)
         if getattr(engine, "eval_loss_func", False):
             loss = engine.eval_loss_func(pred.unsqueeze(0), targets.unsqueeze(0))
@@ -37,6 +38,5 @@ def eval_epoch_base(engine, **kwargs):
 
         metric_result = engine.eval_metric_func(pred.unsqueeze(0), targets.unsqueeze(0))
         engine.eval_metric_info.update(metric_result)
-
         engine.time_info['batch_cost'].update(time.time() - start_time)
         start_time = time.time()
