@@ -8,7 +8,6 @@ Global:
   eval_during_train: true
   eval_interval: 1
   epochs: 500
-  step_per_epoch: 200
   print_batch_step: 25
   bar_disable: true
   img_size: [3, 512, 512]
@@ -45,7 +44,7 @@ Data:
             rgb_range: *rgb_range
     
     DataLoader:
-      num_workers: 8
+      num_workers: 12
       use_shared_memory: true
       prefetch_factor: 32
       batch_sampler:
@@ -62,7 +61,7 @@ Data:
       index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
 
     DataLoader:
-      num_workers: 8
+      num_workers: 12
       use_shared_memory: true
       prefetch_factor: 2
       batch_sampler:
