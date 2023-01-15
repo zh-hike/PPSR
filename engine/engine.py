@@ -94,8 +94,6 @@ class Engine:
             self.eval_loss_func = build_loss(self.cfg, mode='eval')
             self.eval_loss_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Loss']['Train']]+['loss'])
 
-        
-
         # metric
         self.best_metric_value = 0
         if self.cfg['Metric'].get('Train', False):

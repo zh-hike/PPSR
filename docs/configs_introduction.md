@@ -13,6 +13,7 @@
 * * **step_per_epoch**（int，可选）：每个 epoch 训练多少个 iter。当 step_per_epoch * batch_size 大于训练样本数时默认失效。
 * * **print_batch_step**（int，必选）：每隔多少个 iter 打印一次日志。
 * * **bar_disable**（bool，可选）：是否在训练时不展示进度条，默认为 `True`。
+* * **eval_bar_disable**（bool，可选）：是否在验证时不展示进度条，默认为 `True`。
 * * **img_size**（list[channel: int, height: int, weight: int]，必选）：在评估以及推理时，需要先将图片分割成 patch，此参数即为 patch的大小，建议根据验证集以及测试集进行适当调整。
 * * **schedule_update_by**（str，可选）：schedule的更新频率，可选择 `epoch` 或者 `step`，默认为 `step`。
 * * **rgb_range**（float，可选）：在训练过程中像素的最大值，可选择 `1.0` 或者 `255.0`，默认为 `1.0`。
