@@ -7,7 +7,6 @@ Global:
   eval_during_train: true
   eval_interval: 1
   epochs: 500
-  step_per_epoch: 200
   print_batch_step: 25
   bar_disable: true
   img_size: [3, 512, 512]
@@ -15,11 +14,6 @@ Global:
   rgb_range: &rgb_range 255.0
   trainer: common
   scale: &scale 2
-
-AMP:
-  level: O1
-  init_loss_scaling: 65536.
-  use_dynamic_loss_scaling: true
 
 Arch:
   name: EDSR
@@ -37,7 +31,7 @@ Data:
       name: DIV2K
       data_root: /mnt/zh/dataset/div2k/DIV2K
       index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
-      data_expand: 20
+      data_expand: 10
       ops:
         - RandomCrop:
             size: 96
@@ -49,14 +43,15 @@ Data:
             rgb_range: *rgb_range
     
     DataLoader:
-      num_workers: 8
+      num_workers: 12
       use_shared_memory: true
       prefetch_factor: 32
+      return_list: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 32
-        shuffle: false
-        drop_last: false
+        shuffle: true
+        drop_last: true
         
 
   Eval:
@@ -66,9 +61,10 @@ Data:
       index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
 
     DataLoader:
-      num_workers: 8
+      num_workers: 12
       use_shared_memory: true
-      prefetch_factor: 2
+      prefetch_factor: 32
+      return_list: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 1
@@ -93,7 +89,7 @@ Optimizer:
   grad_clip: 0.
   learning_rate:
     name: MultiStepDecay
-    milestones: [50]
+    milestones: [30]
     gamma: 0.5
     learning_rate: 0.0004
 

@@ -16,6 +16,7 @@ from loss.builder import build_loss
 from optimizer.builder import build_optimizer
 from .trainer.util import save_checkoutpoints
 from metrics.builder import build_metric
+from utils.util import set_seed
 
 
 class Engine:
@@ -28,7 +29,10 @@ class Engine:
         self.save_interval = self.cfg['Global'].get('save_interval', -1)
         paddle.disable_signal_handler()
         self.eval_bar_disable = cfg['Global'].get('eval_bar_disable', True)
-        
+        seed = cfg['Global'].get('seed', False)
+        if seed:
+            set_seed(seed)
+
         # 准备
         self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])
         os.makedirs(self.save_path, exist_ok=True)
@@ -45,6 +49,7 @@ class Engine:
         self.amp = cfg.get('AMP', False)
         if self.amp:
             self.amp_level = cfg['AMP'].get('level', 'O1')
+            assert self.amp_level in ['O1', 'O2'], 'level must is O1 or O2'
             self.scale_loss = cfg['AMP'].get('init_loss_scaling', 32768.0)
             self.grad_scaler = paddle.amp.GradScaler(init_loss_scaling=self.scale_loss,
                                                      use_dynamic_loss_scaling=cfg['AMP'].get('use_dynamic_loss_scaling', True))
@@ -80,6 +85,7 @@ class Engine:
         self.eval_dl = build_dataloader(cfg, mode='eval')
         self.rgb_range = cfg['Global'].get('rgb_range', 1.)
         self.scale = cfg['Global'].get('scale', 1)
+        self.step_per_epoch = min(cfg['Global'].get('step_per_epoch', len(self.train_dl)), len(self.train_dl))
 
         # loss_func
         self.train_loss_func = build_loss(self.cfg)
@@ -87,8 +93,6 @@ class Engine:
         if self.cfg['Loss'].get('Eval', False):
             self.eval_loss_func = build_loss(self.cfg, mode='eval')
             self.eval_loss_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Loss']['Train']]+['loss'])
-
-        
 
         # metric
         self.best_metric_value = 0
