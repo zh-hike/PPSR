@@ -84,7 +84,7 @@ class ResBlock(nn.Layer):
 
     def forward(self, x):
         res = self.body(x) * self.res_scale
-        res += x
+        res = res + x
         return res
 
 

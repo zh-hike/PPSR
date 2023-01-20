@@ -85,12 +85,12 @@ python -m paddle.distributed.launch --gpus=0,1 tools/train.py -c ./configs/denoi
 此模型支持单机单卡和单机多卡评估，以下使用`UNet`跑`denoise`举例，生成的模型位置在`/output/denoise/UNet/best_model.pdparams`
 ### 5.1 单机单卡
 ```
-python tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
+python tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model
 ```
 
 ### 5.2 单机多卡
 ```
-python -m paddle.distributed.launch --gpus=0,1 tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
+python -m paddle.distributed.launch --gpus=0,1 tools/eval.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model
 ```
 
 所有的评估日志都默认保存在 `./output/denoise/UNet/eval.log`
@@ -99,7 +99,7 @@ python -m paddle.distributed.launch --gpus=0,1 tools/eval.py -c ./configs/denois
 ### 6.1 模型导出
 首先需要导出推理模型，例如训练好的模型参数在`./output/denoise/UNet/best_model.pdparams`，命令为
 ```
-python tools/export_model.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model.pdparams
+python tools/export_model.py -c ./configs/denoise/unet_watermark.yaml -o Global.pretrained_model=./output/denoise/UNet/best_model
 ```
 模型将自动导出到`./output/denoise/UNet/inference`。
 

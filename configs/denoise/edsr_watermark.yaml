@@ -7,8 +7,7 @@ Global:
   save_interval: -1
   eval_during_train: true
   eval_interval: 1
-  epochs: 500
-  step_per_epoch: 200
+  epochs: 1000
   print_batch_step: 25
   bar_disable: true
   img_size: [3, 128, 128]
@@ -39,19 +38,24 @@ Data:
             pad_if_needed: true
             padding_mode: reflect
             target_scale: *scale
+        - ColorJitter:
+            contrast: 0.3
+            hue: 0.5
+            brightness: 0.2
+            saturation: 1.4
         - ToTensor:
             data_format: CHW
             rgb_range: *rgb_range
     
     DataLoader:
-      num_workers: 8
+      num_workers: 12
       use_shared_memory: true
       prefetch_factor: 32
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 32
-        shuffle: false
-        drop_last: false
+        shuffle: true
+        drop_last: true
         
   Eval:
     Dataset:

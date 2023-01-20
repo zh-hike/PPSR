@@ -8,11 +8,12 @@ def train_epoch_common(engine, epoch_id, iter_start=1):
     start_time = time.time()
     engine.time_info['batch_cost'].reset()
     engine.time_info['read_cost'].reset()
-    step_per_epoch = engine.cfg['Global'].get('step_per_epoch', len(engine.train_dl))
+    step_per_epoch = engine.step_per_epoch
     engine.train_loss_info.reset()
 
     for iter_id, batch in enumerate(engine.train_dl, 1):
-
+        if iter_id > step_per_epoch:
+            break
         inputs, targets = batch
         engine.time_info['read_cost'].update(time.time() - start_time)
 

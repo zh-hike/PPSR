@@ -31,7 +31,7 @@ Data:
     Dataset:
       name: DIV2K
       data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x3.txt
       data_expand: 20
       ops:
         - RandomCrop:
@@ -50,15 +50,15 @@ Data:
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 32
-        shuffle: false
-        drop_last: false
+        shuffle: true
+        drop_last: true
         
 
   Eval:
     Dataset:
       name: ValDataset
       data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x3.txt
 
     DataLoader:
       num_workers: 12
@@ -70,7 +70,7 @@ Data:
         shuffle: false
 
   Test:
-    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X3
 
 Loss:
   Train:

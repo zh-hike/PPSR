@@ -62,9 +62,13 @@ class Engine:
 
         # pretrained model
         if self.cfg['Global'].get('pretrained_model', None) is not None:
+            assert os.path.exists(self.cfg['Global']['pretrained_model']+'.pdparams'), f"file {self.cfg['Global']['pretrained_model']+'.pdparams'} is not exist."
             self.model.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdparams'))
-            self.opt.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdopt'))
-        
+            if self.mode == 'train':
+                assert os.path.exists(self.cfg['Global']['pretrained_model']+'.pdopt'), f"file {self.cfg['Global']['pretrained_model']+'.pdopt'} is not exist."
+                self.opt.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdopt'))
+  
+
         # logger
         output_dir = cfg['Global'].get('output_dir', './output')
         self.train_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/train.log")

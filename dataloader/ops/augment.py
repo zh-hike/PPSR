@@ -1,5 +1,6 @@
 from paddle.vision.transforms import functional as F
 from paddle.vision.transforms import BaseTransform
+from paddle.vision.transforms.transforms import ColorJitter as CJ
 from PIL import Image
 import numpy as np
 import random
@@ -10,6 +11,24 @@ def _get_img_size(img):
     assert isinstance(img, Image.Image)
     if isinstance(img, Image.Image):
         return img.size
+
+
+class ColorJitter(BaseTransform):
+    def __init__(self,
+                 brightness=0.2,
+                 contrast=0.3,
+                 saturation=1.4,
+                 hue=0.5,
+                 keys=None,
+                 **kwargs):
+        super(ColorJitter, self).__init__(keys)
+        self.cj = CJ(brightness=brightness, contrast=contrast, saturation=saturation, hue=hue, **kwargs)
+
+    def __call__(self, img1, img2=None):
+        if img2 is None:
+            return self.cj(img1)
+        else:
+            return self.cj(img1), img2
 
 
 class RandomCrop(BaseTransform):

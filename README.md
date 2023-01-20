@@ -10,4 +10,4 @@
 ## 模型
 此框架实现多种模型，模型列表如下
 * [x] [UNet](./docs/denoise/UNET.md)
-* [x] [EDSR]
+* [x] [EDSR](./docs/sr/EDSR.md)
