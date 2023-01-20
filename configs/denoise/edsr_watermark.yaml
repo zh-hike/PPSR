@@ -1,19 +1,20 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output/sr/X2/
+  output_dir: ./output/denoise/
   save_interval: -1
   dist: true
+  save_interval: -1
   eval_during_train: true
   eval_interval: 1
-  epochs: 500
+  epochs: 1000
   print_batch_step: 25
   bar_disable: true
-  img_size: [3, 512, 512]
+  img_size: [3, 128, 128]
   schedule_update_by: epoch
   rgb_range: &rgb_range 255.0
   trainer: common
-  scale: &scale 2
+  scale: &scale 1
 
 Arch:
   name: EDSR
@@ -28,16 +29,20 @@ Arch:
 Data:
   Train:
     Dataset:
-      name: DIV2K
-      data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
-      data_expand: 10
+      name: WaterMark
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/train_index.txt
       ops:
         - RandomCrop:
             size: 96
             pad_if_needed: true
             padding_mode: reflect
             target_scale: *scale
+        - ColorJitter:
+            contrast: 0.3
+            hue: 0.5
+            brightness: 0.2
+            saturation: 1.4
         - ToTensor:
             data_format: CHW
             rgb_range: *rgb_range
@@ -46,32 +51,29 @@ Data:
       num_workers: 12
       use_shared_memory: true
       prefetch_factor: 32
-      return_list: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 32
         shuffle: true
         drop_last: true
         
-
   Eval:
     Dataset:
       name: ValDataset
-      data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+      data_root: ../dataset/watermark/data/train
+      index_file: ../dataset/watermark/data/train/val_index.txt
 
     DataLoader:
-      num_workers: 12
+      num_workers: 8
       use_shared_memory: true
-      prefetch_factor: 32
-      return_list: true
+      prefetch_factor: 2
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 1
         shuffle: false
 
   Test:
-    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+    path: ../dataset/watermark/data/test_make_A
 
 Loss:
   Train:
@@ -89,16 +91,17 @@ Optimizer:
   grad_clip: 0.
   learning_rate:
     name: MultiStepDecay
-    milestones: [30]
+    milestones: [5, 10, 20]
     gamma: 0.5
     learning_rate: 0.0004
 
 Metric:
-  save_rely_metric: PSNR
+  save_rely_metric: Score
   Eval:
-    - PSNR:
-        weight: 1
-        data_range: *rgb_range
-    - SSIM:
-        weight: 1
-        data_range: *rgb_range
+    - Score:
+        PSNR:
+          weight: 0.005
+          data_range: *rgb_range
+        MSSSIM:
+          weight: 0.5
+          data_range: *rgb_range

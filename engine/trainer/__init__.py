@@ -1,2 +1,1 @@
-from .unet_denoise import train_epoch_unet_denoise
 from .common import train_epoch_common

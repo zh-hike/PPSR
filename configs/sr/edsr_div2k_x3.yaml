@@ -1,9 +1,10 @@
 Global:
   checkoutpoints: null
   pretrained_model: null
-  output_dir: ./output/sr/X2/
+  output_dir: ./output/sr/X3/
   save_interval: -1
   dist: true
+  save_interval: -1
   eval_during_train: true
   eval_interval: 1
   epochs: 500
@@ -13,7 +14,7 @@ Global:
   schedule_update_by: epoch
   rgb_range: &rgb_range 255.0
   trainer: common
-  scale: &scale 2
+  scale: &scale 3
 
 Arch:
   name: EDSR
@@ -30,8 +31,8 @@ Data:
     Dataset:
       name: DIV2K
       data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x2.txt
-      data_expand: 10
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_train_x3.txt
+      data_expand: 20
       ops:
         - RandomCrop:
             size: 96
@@ -46,7 +47,6 @@ Data:
       num_workers: 12
       use_shared_memory: true
       prefetch_factor: 32
-      return_list: true
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 32
@@ -58,20 +58,19 @@ Data:
     Dataset:
       name: ValDataset
       data_root: /mnt/zh/dataset/div2k/DIV2K
-      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x2.txt
+      index_file: /mnt/zh/dataset/div2k/DIV2K/bicubic_val_x3.txt
 
     DataLoader:
       num_workers: 12
       use_shared_memory: true
-      prefetch_factor: 32
-      return_list: true
+      prefetch_factor: 2
       batch_sampler:
         name: DistributedBatchSampler
         batch_size: 1
         shuffle: false
 
   Test:
-    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X2
+    path: /mnt/zh/dataset/div2k/DIV2K/DIV2K_valid_LR_bicubic/X3
 
 Loss:
   Train:
@@ -89,7 +88,7 @@ Optimizer:
   grad_clip: 0.
   learning_rate:
     name: MultiStepDecay
-    milestones: [30]
+    milestones: [50]
     gamma: 0.5
     learning_rate: 0.0004
 

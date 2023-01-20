@@ -16,29 +16,59 @@ from loss.builder import build_loss
 from optimizer.builder import build_optimizer
 from .trainer.util import save_checkoutpoints
 from metrics.builder import build_metric
+from utils.util import set_seed
 
 
 class Engine:
     def __init__(self, cfg, mode="train"):
+        # Global
         self.cfg = cfg
         self._name = f"{cfg['Arch']['name']}_{cfg['Data']['Train']['Dataset']['name']}"
         paddle.device.set_device("gpu")
         self.mode = mode
         self.save_interval = self.cfg['Global'].get('save_interval', -1)
         paddle.disable_signal_handler()
-        
+        self.eval_bar_disable = cfg['Global'].get('eval_bar_disable', True)
+        seed = cfg['Global'].get('seed', False)
+        if seed:
+            set_seed(seed)
+
         # 准备
         self.save_path = os.path.join(self.cfg['Global'].get('output_dir', './output'), self.cfg['Arch']['name'])
         os.makedirs(self.save_path, exist_ok=True)
 
         #  set model
         self.model = build_arch(cfg['Arch'])
-        if self.cfg['Global'].get('pretrained_model', None) is not None:
-            self.model.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']))
+        
+        # optimizer
+        self.opt, self.lr = build_optimizer(self, cfg)
+        self.schedule_update_by = cfg['Global'].get('schedule_update_by', 'step')
+        assert self.schedule_update_by in ['step', 'epoch']
+
+        # AMP
+        self.amp = cfg.get('AMP', False)
+        if self.amp:
+            self.amp_level = cfg['AMP'].get('level', 'O1')
+            assert self.amp_level in ['O1', 'O2'], 'level must is O1 or O2'
+            self.scale_loss = cfg['AMP'].get('init_loss_scaling', 32768.0)
+            self.grad_scaler = paddle.amp.GradScaler(init_loss_scaling=self.scale_loss,
+                                                     use_dynamic_loss_scaling=cfg['AMP'].get('use_dynamic_loss_scaling', True))
+            self.model, self.opt = paddle.amp.decorate(self.model, self.opt, level=self.amp_level)
+
+        # distributed train
         if self.cfg['Global'].get('dist', False):
             dist.init_parallel_env()
             self.model = paddle.DataParallel(self.model)
-        
+
+        # pretrained model
+        if self.cfg['Global'].get('pretrained_model', None) is not None:
+            assert os.path.exists(self.cfg['Global']['pretrained_model']+'.pdparams'), f"file {self.cfg['Global']['pretrained_model']+'.pdparams'} is not exist."
+            self.model.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdparams'))
+            if self.mode == 'train':
+                assert os.path.exists(self.cfg['Global']['pretrained_model']+'.pdopt'), f"file {self.cfg['Global']['pretrained_model']+'.pdopt'} is not exist."
+                self.opt.set_state_dict(paddle.load(self.cfg['Global']['pretrained_model']+'.pdopt'))
+  
+
         # logger
         output_dir = cfg['Global'].get('output_dir', './output')
         self.train_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/train.log")
@@ -59,6 +89,7 @@ class Engine:
         self.eval_dl = build_dataloader(cfg, mode='eval')
         self.rgb_range = cfg['Global'].get('rgb_range', 1.)
         self.scale = cfg['Global'].get('scale', 1)
+        self.step_per_epoch = min(cfg['Global'].get('step_per_epoch', len(self.train_dl)), len(self.train_dl))
 
         # loss_func
         self.train_loss_func = build_loss(self.cfg)
@@ -66,11 +97,6 @@ class Engine:
         if self.cfg['Loss'].get('Eval', False):
             self.eval_loss_func = build_loss(self.cfg, mode='eval')
             self.eval_loss_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Loss']['Train']]+['loss'])
-
-        # optimizer
-        self.opt, self.lr = build_optimizer(self, cfg)
-        self.schedule_update_by = cfg['Global'].get('schedule_update_by', 'step')
-        assert self.schedule_update_by in ['step', 'epoch']
 
         # metric
         self.best_metric_value = 0
@@ -88,7 +114,10 @@ class Engine:
         for epoch_id in tqdm(range(1, self.cfg['Global']['epochs'] + 1), ncols=90, disable=bar_disable):
             
             self.train_func(self, epoch_id)
-            self.eval()
+            if self.cfg['Global'].get('eval_during_train', True):
+                eval_interval = self.cfg['Global'].get('eval_interval', 1)
+                if epoch_id % eval_interval == 0:
+                    self.eval()
             self.save_model('latest')
             if epoch_id % self.save_interval == 0 and self.save_interval != -1:
                 self.save_model(epoch_id=epoch_id)
@@ -127,10 +156,10 @@ class Engine:
         assert mode in ['latest', 'best']
         if mode == 'latest':
             model_name = 'latest_model.pdparams'
-            opt_name = 'latest_opt.pdopt'
+            opt_name = 'latest_model.pdopt'
         elif mode == 'best':
             model_name = 'best_model.pdparams'
-            opt_name = 'best_opt.pdopt'
+            opt_name = 'best_model.pdopt'
         paddle.save(self.model.state_dict(), os.path.join(self.cfg['Global']['output_dir'], self.cfg['Arch']['name'], model_name))
         paddle.save(self.opt.state_dict(), os.path.join(self.cfg['Global']['output_dir'], self.cfg['Arch']['name'], opt_name))
         if epoch_id:
