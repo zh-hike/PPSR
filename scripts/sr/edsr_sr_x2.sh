@@ -7,7 +7,7 @@
 # python tools/train.py -c ./configs/sr/edsr_div2k_x2.yaml
 
 # 多卡训练，卡数制定gpus即可
-python -m paddle.distributed.launch --gpus=0,1 tools/train.py -c ./configs/sr/edsr_div2k_x2.yaml
+python -m paddle.distributed.launch --gpus=1,2,3 tools/train.py -c ./configs/sr/edsr_div2k_x2.yaml
 
 # eval
 # 单卡评估

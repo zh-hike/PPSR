@@ -4,6 +4,7 @@ from arch.builder import build_arch
 import paddle.distributed as dist
 import paddle
 import os
+import logging
 from utils.logger import Logger
 from utils.average_meter import AverageMeter, AverageMeterDict
 from .evaluation.util import log_eval_info
@@ -72,6 +73,7 @@ class Engine:
         # logger
         output_dir = cfg['Global'].get('output_dir', './output')
         self.train_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/train.log")
+        self.train_logger.print_start()
         self.train_logger.print_config(cfg)
         self.eval_logger = Logger(logger_file=f"./{output_dir}/{cfg['Arch']['name']}/eval.log")
 
@@ -105,6 +107,7 @@ class Engine:
             self.train_metric_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Metric']['Train']])
         self.eval_metric_func = build_metric(self.cfg, mode="eval")
         self.eval_metric_info = AverageMeterDict(names=[list(d)[0] for d in self.cfg['Metric']['Eval']])
+        # self.train_logger.info(paddle.summary(self.model, (1,3,224,224)))
 
     def train(self):
         """

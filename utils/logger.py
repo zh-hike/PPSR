@@ -1,6 +1,7 @@
 import logging
 from paddle import distributed as dist
 import os
+from .util import format_dict
 
 def log_at_train0(fun):
 
@@ -15,9 +16,9 @@ class Logger:
         _dir = os.path.dirname(logger_file)
         os.makedirs(_dir, exist_ok=True)
         self._logger = logging.getLogger(name)
-        self._logger.setLevel(level=logging.DEBUG)
+        self._logger.setLevel(level=logging.INFO)
         handler = logging.FileHandler(logger_file, 'a', encoding="UTF-8")
-        handler.setLevel(level=logging.DEBUG)
+        handler.setLevel(level=logging.INFO)
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(message)s")
         handler.setFormatter(formatter)
         self._logger.addHandler(handler)
@@ -38,5 +39,28 @@ class Logger:
     def error(self, fmt):
         self._logger.error(fmt)
 
+    def print_start(self):
+        self.info("""
+        ============================================================================================
+        ==                                                                                        ==
+        ==     ================      ================    ================    ================     ==
+        ==     ==            ==      ==            ==    ==                  ==            ==     ==
+        ==     ==            ==      ==            ==    ==                  ==            ==     ==
+        ==     ==            ==      ==            ==    ==                  ==            ==     ==
+        ==     ================      ================    ================    ================     ==
+        ==     ==                    ==                                ==    ====                 ==                      
+        ==     ==                    ==                                ==    ==    ==             ==                      
+        ==     ==                    ==                                ==    ==        ==         ==
+        ==     ==                    ==                  ================    ==          ====     ==
+        ==                                                                                        ==
+        ==                                                                                        ==
+        ==                                  author:  zhhike                                       ==
+        ==                             github repo:  https://github.com/zh-hike/PPSR              ==
+        ==                                                                                        ==
+        ============================================================================================
+        """)
+
     def print_config(self, cfg):
-        self.info(cfg)
+        if isinstance(cfg, dict):
+            cfg = format_dict(cfg)
+        self.info("\n" + cfg)
